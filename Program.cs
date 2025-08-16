@@ -59,40 +59,51 @@ void MonitoringRequests()
 
 void ProcessBookingOrCancellationRequest()
 {
-    lock (lockObject)
+    if(Monitor.TryEnter(lockObject)) // or Monitor.TryEnter(lockObject, TimeSpan.FromSeconds(1))
     {
-        if (bookingRequests > 0)
+        try
         {
-            if (availableSeats.Count > 0)
+            if (bookingRequests > 0)
             {
-                int seatNumber = availableSeats[0];
-                availableSeats.RemoveAt(0);
-                bookedSeats.Add(seatNumber);
-                bookingRequests -= 1;
-                Console.WriteLine($"Seat {seatNumber} has been booked successfully.");
-                Thread.Sleep(1000); // Simulate processing time
+                if (availableSeats.Count > 0)
+                {
+                    int seatNumber = availableSeats[0];
+                    availableSeats.RemoveAt(0);
+                    bookedSeats.Add(seatNumber);
+                    bookingRequests--;
+                    Console.WriteLine($"Seat {seatNumber} has been booked successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("No seats available for booking.");
+                }
             }
-            else
-            {
-                Console.WriteLine("No seats available for booking.");
-            }
-        }
 
-        if (cancellationRequests.Count > 0)
-        {
-            int seatNumberToCancel = cancellationRequests.Dequeue();
-            if (bookedSeats.Contains(seatNumberToCancel))
+            if (cancellationRequests.Count > 0)
             {
-                bookedSeats.Remove(seatNumberToCancel);
-                availableSeats.Add(seatNumberToCancel);
-                Console.WriteLine($"Booking for seat {seatNumberToCancel} has been cancelled successfully.");
-                Thread.Sleep(1000); // Simulate processing time
+                int seatNumberToCancel = cancellationRequests.Dequeue();
+                if (bookedSeats.Contains(seatNumberToCancel))
+                {
+                    bookedSeats.Remove(seatNumberToCancel);
+                    availableSeats.Add(seatNumberToCancel);
+                    Console.WriteLine($"Booking for seat {seatNumberToCancel} has been cancelled successfully.");
+                }
+                else
+                {
+                    Console.WriteLine($"Seat {seatNumberToCancel} was not booked, cannot cancel.");
+                }
             }
-            else
-            {
-                Console.WriteLine($"Seat {seatNumberToCancel} was not booked, cannot cancel.");
-            }
+
+            Thread.Sleep(3000);
         }
+        finally
+        {
+            Monitor.Exit(lockObject);
+        }
+    }
+    else
+    {
+        Console.WriteLine("System is busy, please try again later.");
     }
 }
 
