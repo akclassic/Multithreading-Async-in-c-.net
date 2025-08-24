@@ -1,5 +1,7 @@
 ﻿Queue<string?> requestsQueue = new Queue<string?>();
 
+using SemaphoreSlim semaphore = new SemaphoreSlim(3,3);
+
 //2. Start the requests queue monitoring thread
 Thread monitoringThread = new Thread(MonitorQueue);
 monitoringThread.Start();   
@@ -25,6 +27,7 @@ void MonitorQueue()
         if(requestsQueue.Count > 0)
         {
             string? input = requestsQueue.Dequeue();
+            semaphore.Wait();
             Thread processeingThread = new Thread(() => ProcessInput(input));
             processeingThread.Start();
             Thread.Sleep(100);
@@ -32,8 +35,15 @@ void MonitorQueue()
     }
 }
 
-static void ProcessInput(string? input)
+void ProcessInput(string? input)
 {
-    Thread.Sleep(1000);
-    Console.WriteLine($"Processed input: {input}");
+    try
+    {
+        Thread.Sleep(1000);
+        Console.WriteLine($"Processed input: {input}");
+    }
+    finally
+    {
+        var prevCount = semaphore.Release();
+    }
 }
