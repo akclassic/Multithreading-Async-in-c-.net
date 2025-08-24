@@ -14,7 +14,10 @@
         }
         finally
         {
-            _lock.ExitWriteLock();
+            if (isLockAcquired)
+            {
+                _lock.ExitWriteLock();
+            }
         }
     }
 
@@ -30,7 +33,10 @@
         }
         finally
         {
-            _lock.ExitReadLock();
+            if (isLockAcquired)
+            {
+                _lock.ExitReadLock();
+            }
         }   
     }
 }
