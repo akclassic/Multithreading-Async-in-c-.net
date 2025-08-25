@@ -2,6 +2,8 @@
 
 using SemaphoreSlim semaphore = new SemaphoreSlim(3,3);
 
+object queueLock = new object();
+
 //2. Start the requests queue monitoring thread
 Thread monitoringThread = new Thread(MonitorQueue);
 monitoringThread.Start();   
@@ -17,7 +19,10 @@ while (true)
         break;
     }
 
-    requestsQueue.Enqueue(input);
+    lock (queueLock)
+    {
+        requestsQueue.Enqueue(input);
+    }
 }
 
 void MonitorQueue()
@@ -26,7 +31,11 @@ void MonitorQueue()
     {
         if(requestsQueue.Count > 0)
         {
-            string? input = requestsQueue.Dequeue();
+            string? input = null;
+            lock (queueLock)
+            {
+                input = requestsQueue.Dequeue();
+            }
             semaphore.Wait();
             Thread processeingThread = new Thread(() => ProcessInput(input));
             processeingThread.Start();
@@ -45,5 +54,6 @@ void ProcessInput(string? input)
     finally
     {
         var prevCount = semaphore.Release();
+        Console.WriteLine($"Semaphore released. Previous count: {prevCount}");
     }
 }
