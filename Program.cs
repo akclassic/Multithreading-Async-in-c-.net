@@ -1,4 +1,6 @@
-﻿using AutoResetEvent autoResetEvent = new AutoResetEvent(false); // use false for non-signaled initial state
+﻿// We are signaling between threads no to protect shared resources but signal threads to proceed around the critical section
+
+using AutoResetEvent autoResetEvent = new AutoResetEvent(false); // use false for non-signaled initial state
 
 string? userInput = null;
 
