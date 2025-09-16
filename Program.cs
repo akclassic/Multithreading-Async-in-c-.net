@@ -1,8 +1,5 @@
 ﻿ManualResetEventSlim manualResetEvent = new ManualResetEventSlim(false);
 
-//manualResetEvent.Set();
-
-//manualResetEvent.Reset();
 Console.WriteLine("Press Enter to release all threads");
 
 //Worker THreads
